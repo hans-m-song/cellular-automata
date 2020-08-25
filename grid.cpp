@@ -120,5 +120,5 @@ Point Grid::apply_direction(Point origin, Direction direction) {
       break;
   }
 
-  return Point(x % width, y % height);
+  return Point((x + width) % width, (y + height) % height);
 }
