@@ -19,6 +19,7 @@ int main(int argc, char** argv) {
   if (argc != 4) {
     std::cout << "not enough arguments\n"
               << "example: ./cellular_automata width height ticks\n";
+    return 1;
   }
 
   run(argv);

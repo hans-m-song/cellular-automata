@@ -4,8 +4,6 @@ RUN apt update && apt install -y build-essential valgrind
 
 COPY *.cpp *.hpp makefile ./
 
-RUN make new
+RUN make
 
 ENTRYPOINT [ "valgrind" ]
-
-CMD [ "./cellular_automata" ]
