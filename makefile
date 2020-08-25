@@ -9,9 +9,6 @@ all: main
 
 new: clean main docker
 
-docker:
-	docker build -t cellular_automata .
-
 main: $(OBJ)
 	$(CXX) $(CXXFLAGS) -o cellular_automata $(OBJ)
 
