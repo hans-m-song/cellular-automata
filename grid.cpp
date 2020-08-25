@@ -1,21 +1,17 @@
 #include "grid.hpp"
 #include "util.hpp"
+#include <iostream>
 #include <stdlib.h>
 
 Grid::Grid(int width, int height) : width(width), height(height) {
   age = 0;
-  space = new int*[width];
-  for (int i = 0; i < height; i++) {
-    space[i] = new int[height];
+  space = Vector2D(width);
+  for (int x = 0; x < width; x++) {
+    space[x] = Vector(height);
   }
 }
 
-Grid::~Grid() {
-  for (int i = 0; i < width; i++) {
-    delete[] space[i];
-  }
-  delete[] space;
-}
+Grid::~Grid() {}
 
 Point Grid::new_point(void) {
   int x = random(0, width);
@@ -30,5 +26,14 @@ void Grid::tick(void) {
   for (int x = 0; x < width; x++) {
     for (int y = 0; y < height; y++) {
     }
+  }
+}
+
+void Grid::print(void) {
+  for (int x = 0; x < width; x++) {
+    for (int y = 0; y < height; y++) {
+      std::cout << (space[x][y] ? "x" : ".");
+    }
+    std::cout << "\n";
   }
 }

@@ -1,18 +1,14 @@
 #include "grid.hpp"
 #include <iostream>
 
-void run(char** argv) {
-  int width = atoi(argv[1]);
-  int height = atoi(argv[2]);
-  int ticks = atoi(argv[3]);
+Grid* setup(int width, int height) { return new Grid(width, height); }
 
-  Grid* grid = new Grid(width, height);
+void cleanup(Grid* grid) { delete grid; }
 
+void run(Grid* grid, int ticks) {
   for (int i = 0; i < ticks; i++) {
     grid->tick();
   }
-
-  delete grid;
 }
 
 int main(int argc, char** argv) {
@@ -22,7 +18,13 @@ int main(int argc, char** argv) {
     return 1;
   }
 
-  run(argv);
+  int width = atoi(argv[1]);
+  int height = atoi(argv[2]);
+  int ticks = atoi(argv[3]);
 
+  Grid* grid = setup(width, height);
+  run(grid, ticks);
+  grid->print();
+  cleanup(grid);
   return 0;
 }
