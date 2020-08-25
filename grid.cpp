@@ -11,10 +11,10 @@ Grid::Grid(int width, int height) : width(width), height(height) {
 }
 
 Grid::~Grid() {
-  for (int i = 0; i < height; i++) {
-    delete space[i];
+  for (int i = 0; i < width; i++) {
+    delete[] space[i];
   }
-  delete space;
+  delete[] space;
 }
 
 Point Grid::new_point(void) {
