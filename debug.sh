@@ -1,0 +1,1 @@
+docker run --rm -it --name cellular_automata cellular_automata
