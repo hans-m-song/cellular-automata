@@ -7,10 +7,13 @@ OBJ = grid.o main.o util.o
 
 all: main
 
-new: clean main docker
+new: clean main
 
 main: $(OBJ)
 	$(CXX) $(CXXFLAGS) -o cellular_automata $(OBJ)
+
+visual: CXXFLAGS += -DDEBUG
+visual: new
 
 clean:
 	rm -f *.o
