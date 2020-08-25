@@ -1,8 +1,12 @@
 #include "grid.hpp"
+#include <chrono>
 #include <iostream>
 #include <unistd.h>
 
-void run(Grid* grid, int ticks) {
+long long run(Grid* grid, int ticks) {
+  using namespace std::chrono;
+  auto start = high_resolution_clock::now();
+
   for (int i = 0; i < ticks; i++) {
     grid->tick();
 #ifdef DEBUG
@@ -10,6 +14,10 @@ void run(Grid* grid, int ticks) {
     usleep(100000);
 #endif
   }
+
+  auto end = high_resolution_clock::now();
+  auto duration = duration_cast<microseconds>(end - start);
+  return duration.count();
 }
 
 int main(int argc, char** argv) {
@@ -25,16 +33,13 @@ int main(int argc, char** argv) {
   int ticks = atoi(argv[4]);
 
   Grid* grid = new Grid(width, height, initial_density);
-  run(grid, ticks);
+
+  long long duration = run(grid, ticks);
 
   int initial_cells = (int)(initial_density * width * height);
-
-#ifdef DEBUG
-  std::cout << "parameters: width=" << width << ", heigh=" << height
-            << ", initial_density=" << initial_density << ", ticks=" << ticks
-            << ", initial_cells=" << initial_cells
-            << ", final_cells=" << grid->sum() << "\n";
-#endif
+  std::cout << width << "," << height << "," << initial_density << "," << ticks
+            << "," << initial_cells << "," << grid->sum() << "," << duration
+            << "\n";
 
   delete grid;
   return 0;
