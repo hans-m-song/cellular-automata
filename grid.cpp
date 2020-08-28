@@ -3,17 +3,19 @@
 #include <algorithm>
 #include <iostream>
 #include <stdlib.h>
+#include <vector>
 
 Grid::Grid(int width, int height, double initial_density)
     : width(width), height(height) {
 
-  space = allocate_space();
+  generation = allocate_space();
+  next_generation = allocate_space();
 
   int initial_cells = (int)(initial_density * width * height);
   Point point;
   for (int i = 0; i < initial_cells; i++) {
     point = empty_cell();
-    space[point.first][point.second] = 1;
+    generation[point.first][point.second] = 1;
   }
 }
 
@@ -33,7 +35,7 @@ Point Grid::empty_cell(void) {
   for (int i = 0; i < max; i++) {
     x = random(0, width - 1);
     y = random(0, height - 1);
-    if (!space[x][y]) {
+    if (!generation[x][y]) {
       return Point(x, y);
     }
   }
@@ -47,7 +49,7 @@ int Grid::sum_neighbour(int x, int y) {
   Point adjacent;
   for (int i = Direction::N; i <= Direction::NW; i++) {
     adjacent = apply_direction(origin, (Direction)i);
-    if (space[adjacent.first][adjacent.second]) {
+    if (generation[adjacent.first][adjacent.second]) {
       sum += 1;
     }
   }
@@ -58,29 +60,28 @@ void Grid::print(void) {
   std::cout << "\e[1;1H\e[2J";
   for (int x = 0; x < width; x++) {
     for (int y = 0; y < height; y++) {
-      std::cout << (space[x][y] ? "o " : ". ");
+      std::cout << (generation[x][y] ? "o " : ". ");
     }
     std::cout << "\n";
   }
 }
 
 void Grid::tick(void) {
-  next_space = allocate_space();
   for (int x = 0; x < width; x++) {
     for (int y = 0; y < height; y++) {
       int neighbours = sum_neighbour(x, y);
-      next_space[x][y]
-          = neighbours == 3 ? 1 : neighbours == 2 ? space[x][y] : 0;
+      next_generation[x][y]
+          = neighbours == 3 ? 1 : neighbours == 2 ? generation[x][y] : 0;
     }
   }
-  space = next_space;
+  next_generation.swap(generation);
 }
 
 int Grid::sum(void) {
   int sum = 0;
   for (int x = 0; x < width; x++) {
     for (int y = 0; y < height; y++) {
-      sum += space[x][y];
+      sum += generation[x][y];
     }
   }
   return sum;
