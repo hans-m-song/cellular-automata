@@ -6,4 +6,4 @@ COPY *.cpp *.hpp makefile ./
 
 RUN make
 
-ENTRYPOINT [ "valgrind" ]
+ENTRYPOINT [ "valgrind", "--leak-check=full"]

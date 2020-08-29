@@ -67,7 +67,10 @@ int Grid::sum_neighbour(int x, int y) {
 }
 
 void Grid::print(void) {
+#ifndef DEBUG
   std::cout << "\e[1;1H\e[2J";
+#endif
+
   for (int x = 0; x < width; x++) {
     for (int y = 0; y < height; y++) {
       std::cout << (generation[x][y] ? "o " : ". ");

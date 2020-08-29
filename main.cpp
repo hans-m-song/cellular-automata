@@ -15,7 +15,7 @@ long long run(Grid* grid, int ticks) {
 
   for (int i = 0; i < ticks; i++) {
     grid->tick();
-#ifdef DEBUG
+#ifdef VISUAL
     grid->print();
     usleep(100000);
 #endif
