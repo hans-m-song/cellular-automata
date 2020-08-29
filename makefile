@@ -12,8 +12,11 @@ new: clean main
 main: $(OBJ)
 	$(CXX) $(CXXFLAGS) -o cellular_automata $(OBJ)
 
-visual: CXXFLAGS += -DDEBUG
+visual: CXXFLAGS += -DVISUAL
 visual: new
+
+debug: CXXFLAGS += -DDEBUG
+debug: visual
 
 clean:
 	rm -f *.o
