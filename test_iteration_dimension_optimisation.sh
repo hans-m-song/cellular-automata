@@ -7,28 +7,26 @@ count=(
 
 function test() {
   for iteration in ${count[@]}; do
-    echo 100 $iteration
-    ./cellular_automata 100 100 0.5 $iteration >> output.$type.csv
+    ./cellular_automata 100 100 0.5 $iteration | tee -a output.$type.csv
   done
 
   for dimension in ${count[@]}; do 
-    echo $dimension 100
-    ./cellular_automata $dimension $dimension 0.5 100 >> output.$type.csv
+    ./cellular_automata $dimension $dimension 0.5 100 | tee -a output.$type.csv
   done
 }
 
 make DEFINE=-O0 new
-filename=o0
+type=o0
 test
 
 make DEFINE=-O1 new
-filename=o1
+type=o1
 test
 
 make DEFINE=-O2 new
-filename=o2
+type=o2
 test
 
 make DEFINE=-O3 new
-filename=o3
+type=o3
 test
