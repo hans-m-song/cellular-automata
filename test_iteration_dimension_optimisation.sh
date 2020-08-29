@@ -2,16 +2,17 @@
 
 count=(
   10 20 30 40 50 60 70 80 90 100 
-  200 300 400 500 600 700 800 900 1000 10000
+  200 300 400 500 600 700 800 900 1000
+  10000
 )
 
 function test() {
   for iteration in ${count[@]}; do
-    ./cellular_automata 100 100 0.5 $iteration | tee -a output.$type.csv
+    ./cellular_automata 100 100 0.5 $iteration | tee -a output.iteration.$type.csv
   done
 
   for dimension in ${count[@]}; do 
-    ./cellular_automata $dimension $dimension 0.5 100 | tee -a output.$type.csv
+    ./cellular_automata $dimension $dimension 0.5 100 | tee -a output.dimension.$type.csv
   done
 }
 
