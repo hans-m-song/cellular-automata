@@ -29,7 +29,8 @@ long long run(Grid* grid, int ticks) {
 int main(int argc, char** argv) {
   if (argc != 5) {
     std::cout << "incorrect number of arguments\n"
-              << "example: ./cellular_automata width height density ticks\n";
+              << "usage:   ./cellular_automata width height density ticks\n"
+              << "example: ./cellular_automata 1000  1000   0.5     100\n";
     return 1;
   }
 

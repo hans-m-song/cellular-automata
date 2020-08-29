@@ -70,8 +70,13 @@ void Grid::tick(void) {
   for (int x = 0; x < width; x++) {
     for (int y = 0; y < height; y++) {
       int neighbours = sum_neighbour(x, y);
-      next_generation[x][y]
-          = neighbours == 3 ? 1 : neighbours == 2 ? generation[x][y] : 0;
+      if (neighbours == 3) {
+        next_generation[x][y] = 1;
+      } else if (neighbours == 2) {
+        next_generation[x][y] = generation[x][y];
+      } else {
+        next_generation[x][y] = 0;
+      }
     }
   }
   next_generation.swap(generation);
