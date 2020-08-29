@@ -5,9 +5,9 @@
 
 /**
  * Runs the simulation
- * @param {Grid*} grid: a grid containing the simulation state
- * @param {int}  ticks: duration to run simulation for
- * @return {long long}: time taken to run simulation in microseconds
+ * @param {Grid*} grid : a grid containing the simulation state
+ * @param {int} ticks  : duration to run simulation for
+ * @return {long long} : time taken to run simulation in microseconds
  */
 long long run(Grid* grid, int ticks) {
   using namespace std::chrono;

@@ -20,15 +20,15 @@ class Grid {
 
   /**
    * Finds an empty cell within the space, only used for first generation cells
-   * @return {Point}: point to an empty cell
+   * @return {Point} : point to an empty cell
    */
   Point empty_cell(void);
 
   /**
    * Finds the total number of live cells surrounding a point
-   * @param {int} x: x coordinate of origin point
-   * @param {int} y: y coordinate of origin point
-   * @return {int} : total number of live cells
+   * @param {int} x : x coordinate of origin point
+   * @param {int} y : y coordinate of origin point
+   * @return {int}  : total number of live cells
    */
   int sum_neighbour(int x, int y);
 
@@ -40,14 +40,21 @@ class Grid {
 
   /**
    * Creates a point by applying the cardinal directions to a point
-   * @param {Point} origin       : point to apply direction to
-   * @param {Direction} direction: a direction to apply
-   * @return {Point}             : a new point, one unit from the origin point
-   *                               in the given direction
+   * @param {Point} origin        : point to apply direction to
+   * @param {Direction} direction : a direction to apply
+   * @return {Point}              : a new point, one unit from the origin point
+   *                                in the given direction
    */
   Point apply_direction(Point origin, Direction direction);
 
   public:
+  /**
+   * Constructor
+   * @param {int} width                : width of grid
+   * @param {int} height               : height of grid
+   * @param {double} initial_intensity : a percentage of the grid to fill with
+   *                                     active cells
+   */
   Grid(int width, int height, double initial_density);
 
   /**
@@ -63,7 +70,7 @@ class Grid {
 
   /**
    * Finds the total number of living cells currently alive
-   * @return {int}: total number of living cells
+   * @return {int} : total number of living cells
    */
   int sum(void);
 };
