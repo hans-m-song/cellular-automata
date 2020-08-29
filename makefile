@@ -20,4 +20,4 @@ debug: visual
 
 clean:
 	rm -f *.o
-	rm -f epidemic
+	rm -f cellular_automata
