@@ -19,18 +19,28 @@ Grid::Grid(int width, int height, double initial_density)
   }
 }
 
-Vector2D Grid::allocate_space(void) {
-  Vector2D space = Vector2D(width);
+Grid::~Grid() {
   for (int x = 0; x < width; x++) {
-    space[x] = Vector(height);
+    delete[] generation[x];
+    delete[] next_generation[x];
+  }
+  delete[] generation;
+  delete[] next_generation;
+}
+
+Vector2D Grid::allocate_space(void) {
+  Vector2D space = new int*[width];
+  for (int x = 0; x < width; x++) {
+    space[x] = new int[height];
+    for (int y = 0; y < height; y++) {
+      space[x][y] = 0;
+    }
   }
   return space;
 }
 
 Point Grid::empty_cell(void) {
-  int x_bound = width - 1;
-  int y_bound = height - 1;
-  int max = x_bound * y_bound;
+  int max = width * height;
   int x, y;
   for (int i = 0; i < max; i++) {
     x = random(0, width - 1);
@@ -79,7 +89,7 @@ void Grid::tick(void) {
       }
     }
   }
-  next_generation.swap(generation);
+  std::swap(generation, next_generation);
 }
 
 int Grid::sum(void) {

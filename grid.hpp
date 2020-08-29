@@ -5,8 +5,7 @@
 #include <vector>
 
 typedef std::pair<int, int> Point;
-typedef std::vector<int> Vector;
-typedef std::vector<Vector> Vector2D;
+typedef int** Vector2D;
 enum Direction { N, NE, E, SE, S, SW, W, NW };
 
 class Grid {
@@ -56,6 +55,7 @@ class Grid {
    *                                     active cells
    */
   Grid(int width, int height, double initial_density);
+  ~Grid();
 
   /**
    * Prints the current state of the grid
