@@ -5,6 +5,6 @@ type=iteration
 
 pre_test
 for iteration in ${iterations[@]}; do
-  dimension=100
+  dimension=1000
   test | tee -a output.iteration.csv
 done

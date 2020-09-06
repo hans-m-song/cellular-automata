@@ -1,5 +1,5 @@
 CXX=g++
-CXXFLAGS = -Wall -std=c++14 $(DEFINE)
+CXXFLAGS = -Wall -std=c++1y $(DEFINE)
 OBJ = grid.o main.o util.o
 
 %.o: %.cpp
