@@ -1,20 +1,25 @@
 # cellular-automata
 
-## commands
+## compiling
 
 - `make` to compile
 - `make clean` to remove compiled
 - `make new` to remove and compile
 - `make visual` enable visualization of grid each iteration
-- `./debug.sh <args>` to run valgrind in docker
-- `./cellular_automata <args>` to run normally
 
-## arguments
+## running
+
+### arguments
 
 - `width` number indicating grid width, e.g. 100
 - `height` number indicating grid height, e.g. 100
-- `initial density` decimal number indicating percentage of board to start with cells, e.g. 0.4
+- `initial_density` decimal number indicating percentage of board to start with cells, e.g. 0.4
 - `ticks` number of iterations, e.g. 20
+
+- `./cellular_automata width height initial_density ticks` to run normally
+- `./debug.sh          width height initial_density ticks` to run valgrind in docker
+
+example: `./cellular_automata 100 100 0.6 100`
 
 ## propogation rules
 
