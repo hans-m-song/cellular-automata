@@ -1,6 +1,6 @@
-CXX=g++
-CXXFLAGS = -Wall -std=c++1y $(DEFINE)
-OBJ = grid.o main.o util.o
+CXX				= g++
+CXXFLAGS 	= -Wall -std=c++1y $(DEFINE)
+OBJ 			= metric.o grid.o util.o main.o
 
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
