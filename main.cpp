@@ -24,17 +24,14 @@ int main(int argc, char** argv) {
   double initial_density = atof(argv[3]);
   int ticks = atoi(argv[4]);
 
-  Grid* grid = new Grid(width, height, initial_density);
-
-  auto metric = grid->run(ticks);
-
+  auto metric = run_grid(width, height, initial_density, ticks);
   auto avg = metric.duration(Measure::Run).count() / ticks;
+
 #ifdef VISUAL
   log("Width", width);
   log("Height", height);
   log("Density", initial_density);
   log("Ticks", ticks);
-  log("Live", grid->sum());
   metric.log();
   log("Tick avg", avg);
 #else
@@ -42,6 +39,5 @@ int main(int argc, char** argv) {
             << "," << metric.csv() << "," << avg << "\n";
 #endif
 
-  delete grid;
   return 0;
 }

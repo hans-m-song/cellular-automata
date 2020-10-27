@@ -10,10 +10,11 @@
 #include "metric.hpp"
 #include "util.hpp"
 
+Metric metric;
+
 Grid::Grid(int width, int height, double initial_density)
     : width(width), height(height) {
   // begin measuring benchmarks
-  metric.start(Measure::Total);
   metric.start(Measure::Init);
 
   // dynamically allocate space for generations
@@ -89,7 +90,7 @@ void Grid::print(void) {
   }
 }
 
-Metric Grid::run(int ticks) {
+void Grid::run(int ticks) {
   metric.start(Measure::Run);
 
   for (int i = 0; i < ticks; i++) {
@@ -101,9 +102,6 @@ Metric Grid::run(int ticks) {
   }
 
   metric.stop(Measure::Run);
-  metric.stop(Measure::Total);
-
-  return metric;
 }
 
 void Grid::tick(void) {
@@ -171,4 +169,15 @@ Point Grid::apply_direction(Point origin, Direction direction) {
   }
 
   return Point((x + width) % width, (y + height) % height);
+}
+
+Metric run_grid(int width, int height, double initial_density, int ticks) {
+  metric.start(Measure::Total);
+
+  Grid* grid = new Grid(width, height, initial_density);
+  grid->run(ticks);
+  delete grid;
+
+  metric.stop(Measure::Total);
+  return metric;
 }

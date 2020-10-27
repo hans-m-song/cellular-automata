@@ -18,9 +18,6 @@ class Grid {
   int* generation;
   int* next_generation;
 
-  // Recording times
-  Metric metric;
-
   /**
    * Finds an empty cell within the space, only used for first generation cells
    * @return {Point} : point to an empty cell
@@ -70,9 +67,8 @@ class Grid {
   /**
    * Runs simulation for number of ticks
    * @param {int} ticks : number of times to run simulation
-   * @return {Metric}   : struct containing performance data of the run
    */
-  Metric run(int ticks);
+  void run(int ticks);
 
   /**
    * Simulates the life of a single generation
@@ -85,5 +81,7 @@ class Grid {
    */
   int sum(void);
 };
+
+Metric run_grid(int width, int height, double initial_density, int ticks);
 
 #endif
