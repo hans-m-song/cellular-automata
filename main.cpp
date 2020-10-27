@@ -1,29 +1,14 @@
-#include "grid.hpp"
+
 #include <chrono>
+#include <iomanip>
 #include <iostream>
-#include <unistd.h>
 
-/**
- * Runs the simulation
- * @param {Grid*} grid : a grid containing the simulation state
- * @param {int} ticks  : duration to run simulation for
- * @return {long long} : time taken to run simulation in microseconds
- */
-long long run(Grid* grid, int ticks) {
-  using namespace std::chrono;
-  auto start = high_resolution_clock::now();
+#include "grid.hpp"
+#include "metric.hpp"
 
-  for (int i = 0; i < ticks; i++) {
-    grid->tick();
-#ifdef VISUAL
-    grid->print();
-    usleep(100000);
-#endif
-  }
-
-  auto end = high_resolution_clock::now();
-  auto duration = duration_cast<microseconds>(end - start);
-  return duration.count();
+template <typename T>
+void log(std::string label, T value) {
+  std::cout << std::setw(10) << label << ":" << std::setw(10) << value << "\n";
 }
 
 int main(int argc, char** argv) {
@@ -41,12 +26,21 @@ int main(int argc, char** argv) {
 
   Grid* grid = new Grid(width, height, initial_density);
 
-  long long duration = run(grid, ticks);
+  auto metric = grid->run(ticks);
 
-  int initial_cells = (int)(initial_density * width * height);
+  auto avg = metric.duration(Measure::Run).count() / ticks;
+#ifdef VISUAL
+  log("Width", width);
+  log("Height", height);
+  log("Density", initial_density);
+  log("Ticks", ticks);
+  log("Live", grid->sum());
+  metric.log();
+  log("Tick avg", avg);
+#else
   std::cout << width << "," << height << "," << initial_density << "," << ticks
-            << "," << initial_cells << "," << grid->sum() << "," << duration
-            << "\n";
+            << "," << metric.csv() << "," << avg << "\n";
+#endif
 
   delete grid;
   return 0;

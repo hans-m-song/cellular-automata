@@ -4,6 +4,8 @@
 #include <utility>
 #include <vector>
 
+#include "metric.hpp"
+
 typedef std::pair<int, int> Point;
 typedef int** Vector2D;
 enum Direction { N, NE, E, SE, S, SW, W, NW };
@@ -16,6 +18,9 @@ class Grid {
   // Space allocated for cell generations
   Vector2D generation;
   Vector2D next_generation;
+
+  // Recording times
+  Metric metric;
 
   /**
    * Finds an empty cell within the space, only used for first generation cells
@@ -46,7 +51,7 @@ class Grid {
    */
   Point apply_direction(Point origin, Direction direction);
 
-  public:
+ public:
   /**
    * Constructor
    * @param {int} width                : width of grid
@@ -62,6 +67,13 @@ class Grid {
    * Note: clears the terminal screen
    */
   void print(void);
+
+  /**
+   * Runs simulation for number of ticks
+   * @param {int} ticks : number of times to run simulation
+   * @return {Metric}   : struct containing performance data of the run
+   */
+  Metric run(int ticks);
 
   /**
    * Simulates the life of a single generation
