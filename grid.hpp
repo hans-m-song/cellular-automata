@@ -7,7 +7,6 @@
 #include "metric.hpp"
 
 typedef std::pair<int, int> Point;
-typedef int** Vector2D;
 enum Direction { N, NE, E, SE, S, SW, W, NW };
 
 class Grid {
@@ -16,8 +15,8 @@ class Grid {
   int height;
 
   // Space allocated for cell generations
-  Vector2D generation;
-  Vector2D next_generation;
+  int* generation;
+  int* next_generation;
 
   // Recording times
   Metric metric;
@@ -38,9 +37,9 @@ class Grid {
 
   /**
    * Allocates a two dimensional vector indexed as vector[width][height]
-   * @return {Vector2D}: the newly allocated two dimensional vector
+   * @return {int*}: the newly allocated array
    */
-  Vector2D allocate_space(void);
+  int* allocate_space(void);
 
   /**
    * Creates a point by applying the cardinal directions to a point

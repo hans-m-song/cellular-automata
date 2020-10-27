@@ -27,27 +27,22 @@ Grid::Grid(int width, int height, double initial_density)
   Point point;
   for (int i = 0; i < initial_cells; i++) {
     point = empty_cell();
-    generation[point.first][point.second] = 1;
+    generation[point.first * width + point.second] = 1;
   }
 
   metric.stop(Measure::Init);
 }
 
 Grid::~Grid() {
-  for (int x = 0; x < width; x++) {
-    delete[] generation[x];
-    delete[] next_generation[x];
-  }
   delete[] generation;
   delete[] next_generation;
 }
 
-Vector2D Grid::allocate_space(void) {
-  Vector2D space = new int*[width];
+int* Grid::allocate_space(void) {
+  int* space = new int[width * height];
   for (int x = 0; x < width; x++) {
-    space[x] = new int[height];
     for (int y = 0; y < height; y++) {
-      space[x][y] = 0;
+      space[x * width + y] = 0;
     }
   }
   return space;
@@ -59,7 +54,7 @@ Point Grid::empty_cell(void) {
   for (int i = 0; i < max; i++) {
     x = random(0, width - 1);
     y = random(0, height - 1);
-    if (!generation[x][y]) {
+    if (!generation[x * width + y]) {
       return Point(x, y);
     }
   }
@@ -74,7 +69,7 @@ int Grid::sum_neighbour(int x, int y) {
   // check each direction
   for (int i = Direction::N; i <= Direction::NW; i++) {
     adjacent = apply_direction(origin, (Direction)i);
-    if (generation[adjacent.first][adjacent.second]) {
+    if (generation[adjacent.first * width + adjacent.second]) {
       sum += 1;
     }
   }
@@ -88,7 +83,7 @@ void Grid::print(void) {
 
   for (int x = 0; x < width; x++) {
     for (int y = 0; y < height; y++) {
-      std::cout << (generation[x][y] ? "o " : ". ");
+      std::cout << (generation[x * width + y] ? "o " : ". ");
     }
     std::cout << "\n";
   }
@@ -117,13 +112,13 @@ void Grid::tick(void) {
       int neighbours = sum_neighbour(x, y);
       if (neighbours == 3) {
         // if 3 live neighbours exactly, cell lives
-        next_generation[x][y] = 1;
+        next_generation[x * width + y] = 1;
       } else if (neighbours == 2) {
         // if 2 live neighbours exactly, cell maintains status
-        next_generation[x][y] = generation[x][y];
+        next_generation[x * width + y] = generation[x * width + y];
       } else {
         // otherwise else cell dies
-        next_generation[x][y] = 0;
+        next_generation[x * width + y] = 0;
       }
     }
   }
@@ -135,7 +130,7 @@ int Grid::sum(void) {
   int sum = 0;
   for (int x = 0; x < width; x++) {
     for (int y = 0; y < height; y++) {
-      sum += generation[x][y];
+      sum += generation[x * width + y];
     }
   }
   return sum;
