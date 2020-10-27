@@ -1,4 +1,5 @@
 #include "util.hpp"
+
 #include <cstdlib>
 #include <ctime>
 #include <random>
