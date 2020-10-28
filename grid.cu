@@ -183,8 +183,10 @@ Metric run_grid(int width, int height, double initial_density, int ticks) {
   init(width, height, initial_density);
   metric.stop(Measure::Init);
 
+  int block_size=32;
+  int grid_size=((N + block_size - 1) / block_size);
   metric.start(Measure::Run);
-  run<<<1, 1>>>(generation, next_generation, width, height, ticks);
+  run<<<grid_size, block_size>>>(generation, next_generation, width, height, ticks);
   metric.stop(Measure::Run);
   
   metric.stop(Measure::Total);
