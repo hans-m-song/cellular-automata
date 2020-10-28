@@ -1,28 +1,34 @@
-CXX				= g++
-CXXFLAGS 	= $(DEFINE) -Wall -std=c++1y -O2
-OBJ 			= metric.o util.o main.o
-NVCC			= nvcc
-NVFLAGS		= $(DEFINE) -O2 --gpu-architecture=sm_35 -Wno-deprecated-gpu-targets
+FLAGS    = -O2 -std=c++11
+CXX      = g++
+CXXFLAGS = -Wall
+OBJ      = metric.o util.o main.o
+NVCC     = nvcc
+NVFLAGS  = --gpu-architecture=sm_35 -Wno-deprecated-gpu-targets
 
 %.o: %.cpp
-	$(CXX) $(CXXFLAGS) -c -o $@ $<
+	$(CXX) $(CXXFLAGS) $(FLAGS) -c -o $@ $<
 
 all: main
 
-new: clean main
-
 main: $(OBJ) grid.o
-	$(CXX) $(CXXFLAGS) -o cellular_automata $(OBJ) grid.o
+	$(CXX) $(CXXFLAGS) $(FLAGS) -o cellular_automata $(OBJ) grid.o
 
 cuda: $(OBJ)
-	$(NVCC) $(NVFLAGS) -o cuda_cellular_automata $(OBJ) grid.cu
+	$(NVCC) $(NVFLAGS) $(FLAGS) -o cuda_cellular_automata $(OBJ) grid.cu
 
-visual: CXXFLAGS += -DVISUAL
-visual: new
+visual: FLAGS += -DVISUAL
+visual: clean main
 
-debug: CXXFLAGS += -DDEBUG
+visualcuda: FLAGS += -DVISUAL
+visualcuda: clean cuda
+
+debug: FLAGS += -DDEBUG
 debug: visual
+
+debugcuda: FLAGS += -DDEBUG
+debugcuda: visualcuda
 
 clean:
 	rm -f *.o
 	rm -f cellular_automata
+	rm -f cuda_cellular_automata

@@ -11,17 +11,9 @@
 #include "util.hpp"
 
 Metric metric;
+
 int* generation;
 int* next_generation;
-
-int* d_generation;
-int* d_next_generation;
-
-int h_width;
-int h_height;
-
-__device__ int width;
-__device__ int height;
 
 void checkError(cudaError_t e) {
   if (e != cudaSuccess) {
@@ -46,13 +38,9 @@ int empty_cell(int* generation, int width, int height) {
 }
 
 void init(int width, int height, double initial_density) {
-  checkError(cudaMemcpyToSymbol("width", &width, sizeof(int)));
-  checkError(cudaMemcpyToSymbol("height", &height, sizeof(int)));
-
   int size = width * height;
 
-  generation = new int[size];
-  next_generation = new int[size];
+  int* init_generation = new int[size];
   
   for (int i = 0; i < size; i++) {
     generation[i] = 0;
@@ -67,23 +55,22 @@ void init(int width, int height, double initial_density) {
   }
   
   // allocate memory on device
-  checkError(cudaMalloc((void**)&d_generation, size));
-  checkError(cudaMalloc((void**)&d_next_generation, size));
+  checkError(cudaMalloc((void**)&generation, size));
+  checkError(cudaMalloc((void**)&next_generation, size));
 
   // copy over empty data
-  checkError(cudaMemcpy(d_generation, generation, size, cudaMemcpyHostToDevice));
+  checkError(cudaMemcpy(generation, generation, size, cudaMemcpyHostToDevice));
   // don't need to initialize next_generation since it'll be overwritten during tick
+  delete[] init_generation;
 }
 
 void deinit() {
-  delete[] generation;
-  delete[] next_generation;
-  cudaFree(d_generation);
-  cudaFree(d_next_generation);
+  cudaFree(generation);
+  cudaFree(next_generation);
 }
 
 __device__
-int apply_direction(int i, int j, Direction direction) {
+int apply_direction(int width, int height, int i, int j, Direction direction) {
   int x = i;
   int y = j;
   switch (direction) {
@@ -121,13 +108,13 @@ int apply_direction(int i, int j, Direction direction) {
 }
 
 __device__
-int sum_neighbour(int* d_generation, int x, int y) {
+int sum_neighbour(int* generation, int width, int height, int x, int y) {
   int sum = 0;
   int adjacent;
   // check each direction
   for (int i = Direction::N; i <= Direction::NW; i++) {
-    adjacent = apply_direction(x, y, (Direction)i);
-    if (d_generation[adjacent]) {
+    adjacent = apply_direction(width, height, x, y, (Direction)i);
+    if (generation[adjacent]) {
       sum += 1;
     }
   }
@@ -135,65 +122,72 @@ int sum_neighbour(int* d_generation, int x, int y) {
 }
 
 __device__
-void tick(int* d_generation, int* d_next_generation) {
+void tick(int* generation, int* next_generation, int width, int height) {
   int x = blockIdx.x * blockDim.x + threadIdx.x;
   int y = blockIdx.y * blockDim.y + threadIdx.y;
   int x_stride = blockDim.x * gridDim.x;
   int y_stride = blockDim.y * gridDim.y;
 
-  for (int i = x; i < N; i += x_stride) {
-    for (int j = y; j < N; j += y_stride) {
-      int neighbours = sum_neighbour(d_generation, i, j);
+  for (int i = x; i < width; i += x_stride) {
+    for (int j = y; j < height; j += y_stride) {
+      int neighbours = sum_neighbour(generation, width, height, i, j);
       if (neighbours == 3) {
         // if 3 live neighbours exactly, cell lives
-        d_next_generation[i * width + j] = 1;
+        next_generation[i * width + j] = 1;
       } else if (neighbours == 2) {
         // if 2 live neighbours exactly, cell maintains status
-        d_next_generation[i * width + j] = d_generation[i * width + j];
+        next_generation[i * width + j] = generation[i * width + j];
       } else {
         // otherwise else cell dies
-        d_next_generation[i * width + j] = 0;
+        next_generation[i * width + j] = 0;
       }
     }
   }
   // swap currently active generation
-  auto temp = d_generation;
-  d_generation = d_next_generation;
-  d_next_generation = temp;
+  auto temp = generation;
+  generation = next_generation;
+  next_generation = temp;
 }
 
-__global__
-void run(int ticks, int* d_generation, int* d_next_generation) {
-  for (int i = 0; i < ticks; i++) {
-    __syncthreads(); // ensure generation is completely generated
-    tick(d_generation, d_next_generation);
+__device__
+void print(int* generation, int width, int height) {
+#ifdef VISUAL
+#ifndef DEBUG
+  printf("\e[1;1H\e[2J");
+#endif
+#endif
+  
+  for (int x = 0; x < width; x++) {
+    for (int y = 0; y < height; y++) {
+      printf(generation[x * width + y] ? "o " : ". ");
+    }
+    printf("\n");
   }
 }
 
-void print(void) {
-#ifndef DEBUG
-  std::cout << "\e[1;1H\e[2J";
+__global__
+void run(int* generation, int* next_generation, int width, int height, int ticks) {
+  for (int i = 0; i < ticks; i++) {
+    printf("tick %d\n", i);
+    __syncthreads(); // ensure generation is completely generated
+    tick(generation, next_generation, width, height);
+#ifdef VISUAL
+    print(generation, width, height);
 #endif
-
-  for (int x = 0; x < h_width; x++) {
-    for (int y = 0; y < h_height; y++) {
-      std::cout << (d_generation[x * h_width + y] ? "o " : ". ");
-    }
-    std::cout << "\n";
   }
 }
 
 Metric run_grid(int width, int height, double initial_density, int ticks) {
-  h_width = width;
-  h_height = height;
   metric.start(Measure::Total);
-
+  
   metric.start(Measure::Init);
+  std::cout << "init\n";
   init(width, height, initial_density);
   metric.stop(Measure::Init);
 
   metric.start(Measure::Run);
-  run<<<1, 1>>>(ticks, d_generation, d_next_generation);
+  std::cout << "run\n";
+  run<<<1, 1>>>(generation, next_generation, width, height, ticks);
   metric.stop(Measure::Run);
   
   metric.stop(Measure::Total);
