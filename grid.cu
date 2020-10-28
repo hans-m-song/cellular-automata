@@ -43,15 +43,15 @@ void init(int width, int height, double initial_density) {
   int* init_generation = new int[size];
   
   for (int i = 0; i < size; i++) {
-    generation[i] = 0;
+    init_generation[i] = 0;
   }
   
   int initial_cells = (int)(initial_density * size);
   
   int point;
   for (int i = 0; i < initial_cells; i++) {
-    point = empty_cell(generation, width, height);
-    generation[point] = 1;
+    point = empty_cell(init_generation, width, height);
+    init_generation[point] = 1;
   }
   
   // allocate memory on device
@@ -181,12 +181,10 @@ Metric run_grid(int width, int height, double initial_density, int ticks) {
   metric.start(Measure::Total);
   
   metric.start(Measure::Init);
-  std::cout << "init\n";
   init(width, height, initial_density);
   metric.stop(Measure::Init);
 
   metric.start(Measure::Run);
-  std::cout << "run\n";
   run<<<1, 1>>>(generation, next_generation, width, height, ticks);
   metric.stop(Measure::Run);
   
