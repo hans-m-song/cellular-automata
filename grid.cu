@@ -53,13 +53,13 @@ void init(int width, int height, double initial_density) {
     point = empty_cell(init_generation, width, height);
     init_generation[point] = 1;
   }
-  
+
   // allocate memory on device
   checkError(cudaMalloc((void**)&generation, size));
   checkError(cudaMalloc((void**)&next_generation, size));
 
   // copy over empty data
-  checkError(cudaMemcpy(generation, generation, size, cudaMemcpyHostToDevice));
+  checkError(cudaMemcpy(generation, init_generation, size, cudaMemcpyHostToDevice));
   // don't need to initialize next_generation since it'll be overwritten during tick
   delete[] init_generation;
 }
@@ -168,7 +168,6 @@ void print(int* generation, int width, int height) {
 __global__
 void run(int* generation, int* next_generation, int width, int height, int ticks) {
   for (int i = 0; i < ticks; i++) {
-    printf("tick %d\n", i);
     __syncthreads(); // ensure generation is completely generated
     tick(generation, next_generation, width, height);
 #ifdef VISUAL
