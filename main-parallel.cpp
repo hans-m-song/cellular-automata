@@ -12,11 +12,18 @@
 #include "metric.hpp"
 #include "util.hpp"
 
+// Storage for timings
 Metric metric;
+
+// Simulation parameters
 int worker_count, id, width, height, size, rows, ticks;
 double initial_density;
+
+// Storage for generations
 int *init_generation, *generation, *next_generation;
 int up_id, *up_row, down_id, *down_row;
+
+// values to split data for MPI scatterv/gatherv
 int *sendcounts, *displs;
 
 template <typename T>
@@ -24,6 +31,10 @@ void log(std::string label, T value) {
   std::cout << std::setw(10) << label << ":" << std::setw(10) << value << "\n";
 }
 
+/**
+ * Prints the current state of the grid
+ * Note: clears the terminal screen
+ */
 void print(void) {
 #ifdef VISUAL
 #ifndef DEBUG
@@ -33,12 +44,16 @@ void print(void) {
 
   for (int x = 0; x < width; x++) {
     for (int y = 0; y < height; y++) {
+      // "o" for live cells and "." for dead cells
       std::cout << (init_generation[x * width + y] ? "o " : ". ");
     }
     std::cout << "\n";
   }
 }
 
+/**
+ * Converts an integer array into string form for debugging
+ */
 std::string print_arr(int* a, int length) {
   std::string result = "[ ";
   for (int i = 0; i < length; i++) {
@@ -54,6 +69,9 @@ std::string print_arr(int* a, int length) {
   return result;
 }
 
+/**
+ * creates a integer array, setting all values to 0
+ */
 int* allocate_space(void) {
   int* space = new int[size];
   for (int x = 0; x < width; x++) {
@@ -64,6 +82,10 @@ int* allocate_space(void) {
   return space;
 }
 
+/**
+ * Finds an empty cell within the space, only used for first generation cells
+ * @return {Point} : point to an empty cell
+ */
 Point empty_cell(void) {
   int x, y;
   for (int i = 0; i < size; i++) {
@@ -77,6 +99,12 @@ Point empty_cell(void) {
   return Point(-1, -1);
 }
 
+/**
+ * Finds the total number of live cells surrounding a point
+ * @param {int} x : x coordinate of origin point
+ * @param {int} y : y coordinate of origin point
+ * @return {int}  : total number of live cells
+ */
 int sum_neighbour(int x, int y) {
   int sum = 0;
   for (int j = y - 1; j < y + 2; j++) {
@@ -101,6 +129,9 @@ int sum_neighbour(int x, int y) {
   return sum;
 }
 
+/**
+ * Simulates the life of a single generation
+ */
 void tick(void) {
   // #pragma omp parallel for
   for (int y = 0; y < rows; y++) {
@@ -122,6 +153,9 @@ void tick(void) {
   std::swap(generation, next_generation);
 }
 
+/**
+ * Runs an instance of the simulation using the given parameters
+ */
 void run(void) {
   metric.start(Measure::Run);
 
@@ -143,10 +177,11 @@ void run(void) {
 
     tick();
 
+#ifdef VISUAL
+    // gather current generation for printing
     MPI_Gatherv(generation, sendcounts[id], MPI_INT, init_generation,
                 sendcounts, displs, MPI_INT, 0, MPI_COMM_WORLD);
 
-#ifdef VISUAL
     if (id == 0) {
       print();
       usleep(100000);
@@ -157,6 +192,9 @@ void run(void) {
   metric.stop(Measure::Run);
 }
 
+/**
+ * Creates the first generation
+ */
 void init(void) {
   // begin measuring benchmarks
   metric.start(Measure::Init);
@@ -176,6 +214,11 @@ void init(void) {
 
   metric.stop(Measure::Init);
 }
+
+/**
+ * Determines workload for each worker, allocates memory, and splits initial
+ * generation
+ */
 void scatter(void) {
   int sum = 0;
   int count = height / worker_count;
@@ -227,10 +270,7 @@ int main(int argc, char** argv) {
 
   metric.start(Measure::Total);
 
-  if (id == 0) {
-    init();
-    print();
-  }
+  if (id == 0) init();
 
   scatter();
 

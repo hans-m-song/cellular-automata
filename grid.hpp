@@ -82,6 +82,15 @@ class Grid {
   int sum(void);
 };
 
+/**
+ * Runs an instance of the simulation using the given parameters
+ * @param {int} width                : width of grid
+ * @param {int} height               : heigh
+ * @param {int} ticks : number of times to run simulationt of grid
+ * @param {double} initial_intensity : a percentage of the grid to fill with
+ *                                     active cells
+ * @return {Metric} timing data from simulation run
+ */
 Metric run_grid(int width, int height, double initial_density, int ticks);
 
 #endif
