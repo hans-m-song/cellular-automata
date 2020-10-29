@@ -16,7 +16,7 @@ Metric metric;
 int worker_count, id, width, height, size, rows, ticks;
 double initial_density;
 int *init_generation, *generation, *next_generation;
-int upId, *up, downId, *down;
+int up_id, *up_row, down_id, *down_row;
 int *sendcounts, *displs;
 
 template <typename T>
@@ -25,8 +25,10 @@ void log(std::string label, T value) {
 }
 
 void print(void) {
+#ifdef VISUAL
 #ifndef DEBUG
   std::cout << "\e[1;1H\e[2J";
+#endif
 #endif
 
   for (int x = 0; x < width; x++) {
@@ -37,26 +39,19 @@ void print(void) {
   }
 }
 
-void print_arr(int* a) {
-  int length = sizeof(a) / sizeof(a[0]);
-  std::cout << "[ ";
+std::string print_arr(int* a, int length) {
+  std::string result = "[ ";
   for (int i = 0; i < length; i++) {
-    std::cout << a[i];
+    if (a[i] < 10) {
+      result.append(" ");
+    }
+    result.append(std::to_string(a[i]));
     if (i < length - 1) {
-      std::cout << ", ";
+      result.append(", ");
     }
   }
-  std::cout << " ]\n";
-}
-
-/**
- * Sends/receives a message
- * 1 to signal job or 0 to signal completion
- */
-int msg(int payload = 1) {
-  int data = payload;
-  MPI_Bcast(&data, 1, MPI_INT, 0, MPI_COMM_WORLD);
-  return data;
+  result.append(" ]");
+  return result;
 }
 
 int* allocate_space(void) {
@@ -74,7 +69,7 @@ Point empty_cell(void) {
   for (int i = 0; i < size; i++) {
     x = random(0, width - 1);
     y = random(0, height - 1);
-    if (!generation[x * width + y]) {
+    if (!init_generation[x * width + y]) {
       return Point(x, y);
     }
   }
@@ -82,81 +77,44 @@ Point empty_cell(void) {
   return Point(-1, -1);
 }
 
-int sum(void) {
-  int sum = 0;
-  for (int x = 0; x < width; x++) {
-    for (int y = 0; y < height; y++) {
-      sum += generation[x * width + y];
-    }
-  }
-  return sum;
-}
-
-Point apply_direction(Point origin, Direction direction) {
-  int x = origin.first;
-  int y = origin.second;
-  switch (direction) {
-    case Direction::N:
-      x += 1;
-      break;
-    case Direction::NE:
-      x += 1;
-      y += 1;
-      break;
-    case Direction::E:
-      y += 1;
-      break;
-    case Direction::SE:
-      x -= 1;
-      y += 1;
-      break;
-    case Direction::S:
-      x -= 1;
-      break;
-    case Direction::SW:
-      x -= 1;
-      y -= 1;
-      break;
-    case Direction::W:
-      y -= 1;
-      break;
-    case Direction::NW:
-      x += 1;
-      y -= 1;
-      break;
-  }
-
-  return Point((x + width) % width, (y + height) % height);
-}
-
 int sum_neighbour(int x, int y) {
   int sum = 0;
-  Point origin = Point(x, y);
-  Point adjacent;
-  // check each direction
-  for (int i = Direction::N; i <= Direction::NW; i++) {
-    adjacent = apply_direction(origin, (Direction)i);
-    if (generation[adjacent.first * width + adjacent.second]) {
-      sum += 1;
+  for (int j = y - 1; j < y + 1; y++) {
+    for (int i = x - 1; i < x + 1; i++) {
+      int coord = (i + width) % width;
+      if (j < 0) {  // above owned grid section
+        if (up_row[coord]) {
+          sum += 1;
+        }
+      } else if (j >= rows) {
+        if (down_row[coord]) {  // below owned grid section
+          sum += 1;
+        }
+      } else {  // within owned grid section
+        if (generation[j * width + coord]) {
+          sum += 1;
+        }
+      }
     }
   }
+
   return sum;
 }
 
 void tick(void) {
-#pragma omp parallel for
-  for (int x = 0; x < width; x++) {
-    for (int y = 0; y < height; y++) {
+  // #pragma omp parallel for
+  for (int y = 0; y < rows; y++) {
+    for (int x = 0; x < width; x++) {
       int neighbours = sum_neighbour(x, y);
       if (neighbours == 3) {
         // if 3 live neighbours exactly, cell lives
-        next_generation[x * width + y] = 1;
+        next_generation[y * width + x] = 1;
       } else if (neighbours == 2) {
         // if 2 live neighbours exactly, cell maintains status
-        next_generation[x * width + y] = generation[x * width + y];
+        next_generation[y * width + x] = generation[y * width + x];
       } else {
         // otherwise else cell dies
-        next_generation[x * width + y] = 0;
+        next_generation[y * width + x] = 0;
       }
     }
   }
@@ -164,22 +122,35 @@ void tick(void) {
   std::swap(generation, next_generation);
 }
 
-void sync(void) {
-  MPI_Barrier(MPI_COMM_WORLD);
-  for (int i = 0; i <) }
-
 void run(void) {
   metric.start(Measure::Run);
 
+  MPI_Status s;
   for (int i = 0; i < ticks; i++) {
-    msg();
+    // send top row and receive bottom row
+    MPI_Sendrecv(generation, width, MPI_INT, up_id, 1, down_row, width, MPI_INT,
+                 down_id, 1, MPI_COMM_WORLD, &s);
 
-    MPI_Barrier(MPI_COMM_WORLD);
+    // send bottom row and receive top row
+    MPI_Sendrecv(generation + sendcounts[id] - width, width, MPI_INT, down_id,
+                 2, up_row, width, MPI_INT, up_id, 2, MPI_COMM_WORLD, &s);
+
+#ifdef DEBUG
+    std::cout << id << " - " << print_arr(up_row, width) << "\n"
+              << "    " << print_arr(generation, sendcounts[id]) << "\n"
+              << "    " << print_arr(down_row, width) << "\n";
+#endif
+
     tick();
-    sync();
+
+    MPI_Gatherv(generation, sendcounts[id], MPI_INT, init_generation,
+                sendcounts, displs, MPI_INT, 0, MPI_COMM_WORLD);
+
 #ifdef VISUAL
-    print();
-    usleep(100000);
+    if (id == 0) {
+      print();
+      usleep(100000);
+    }
 #endif
   }
 
@@ -224,6 +195,9 @@ void scatter(void) {
 
   generation = new int[sendcounts[id]];
   next_generation = new int[sendcounts[id]];
+  up_row = new int[width];
+  down_row = new int[width];
+  rows = sendcounts[id] / width;
 
   MPI_Scatterv(init_generation, sendcounts, displs, MPI_INT, generation,
                sendcounts[id], MPI_INT, 0, MPI_COMM_WORLD);
@@ -234,20 +208,21 @@ int main(int argc, char** argv) {
 
   MPI_Comm_size(MPI_COMM_WORLD, &worker_count);
   MPI_Comm_rank(MPI_COMM_WORLD, &id);
-  upId = (id - 1 + worker_count) % worker_count;
-  downId = (id + 1) % worker_count;
+  up_id = (id - 1 + worker_count) % worker_count;
+  down_id = (id + 1) % worker_count;
 
   if (argc != 5) {
     std::cout << "incorrect number of arguments\n"
               << "usage:   ./cellular_automata width height density ticks\n"
               << "example: ./cellular_automata 1000  1000   0.5     100\n";
+    MPI_Finalize();
     return 1;
   }
 
-  int width = atoi(argv[1]);
-  int height = atoi(argv[2]);
-  double initial_density = atof(argv[3]);
-  int ticks = atoi(argv[4]);
+  width = atoi(argv[1]);
+  height = atoi(argv[2]);
+  initial_density = atof(argv[3]);
+  ticks = atoi(argv[4]);
   size = height * width;
 
   metric.start(Measure::Total);
@@ -259,14 +234,12 @@ int main(int argc, char** argv) {
 
   scatter();
 
+#ifdef DEBUG
   if (id == 0) {
-    print_arr(sendcounts);
-    print_arr(displs);
+    std::cout << "sendcounts " << print_arr(sendcounts, worker_count) << "\n"
+              << "displs     " << print_arr(displs, worker_count) << "\n";
   }
-
-  if (true) {
-    return;
-  }
+#endif
 
   run();
 
@@ -287,11 +260,13 @@ int main(int argc, char** argv) {
 #endif
   }
 
-  delete[] init_generation;
+  if (id == 0) {
+    delete[] init_generation;
+  }
   delete[] generation;
   delete[] next_generation;
-  delete[] up;
-  delete[] down;
+  delete[] up_row;
+  delete[] down_row;
   delete[] sendcounts;
   delete[] displs;
   MPI_Finalize();
