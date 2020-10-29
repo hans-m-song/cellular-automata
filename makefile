@@ -2,9 +2,6 @@ FLAGS     = -O2 -std=c++11
 CXX       = g++
 CXXFLAGS  = -Wall
 OBJ       = metric.o util.o
-SERIALOBJ = $(OBJ) grid.o main.o
-CUDAOBJ   = $(OBJ) main.o
-MPIOBJ    = $(OBJ) grid-parallel.o main-parallel.o
 NVCC      = nvcc
 NVFLAGS   = --gpu-architecture=sm_35 -Wno-deprecated-gpu-targets
 MPICXX    = mpic++
@@ -14,14 +11,14 @@ MPICXX    = mpic++
 
 all: main
 
-main: $(SERIALOBJ)
-	$(CXX) $(CXXFLAGS) $(FLAGS) -o cellular_automata $(SERIALOBJ)
+main: $(OBJ) grid.o main.o
+	$(CXX) $(CXXFLAGS) $(FLAGS) -o cellular_automata $(OBJ) grid.o main.o
 
-cuda: $(CUDAOBJ)
-	$(NVCC) $(NVFLAGS) $(FLAGS) -o cuda_cellular_automata $(CUDAOBJ) grid.cu
+cuda: $(OBJ) main.o
+	$(NVCC) $(NVFLAGS) $(FLAGS) -o cuda_cellular_automata $(OBJ) main.o grid.cu
 
-mpi: $(MPIOBJ)
-	$(MPICXX) $(CXXFLAGS) -fopenmp $(FLAGS) -o mpi_cellular_automata $(MPIOBJ)
+mpi: $(OBJ)
+	$(MPICXX) $(CXXFLAGS) -fopenmp $(FLAGS) -o mpi_cellular_automata $(OBJ) grid-parallel.cpp main-parallel.cpp
 
 debug: FLAGS += -DDEBUG
 debug: visual
