@@ -18,7 +18,7 @@ cuda: $(OBJ) main.o
 	$(NVCC) $(NVFLAGS) $(FLAGS) -o cuda_cellular_automata $(OBJ) main.o grid.cu
 
 mpi: $(OBJ)
-	$(MPICXX) $(CXXFLAGS) -fopenmp $(FLAGS) -o mpi_cellular_automata $(OBJ) grid-parallel.cpp main-parallel.cpp
+	$(MPICXX) $(CXXFLAGS) -fopenmp $(FLAGS) -o mpi_cellular_automata $(OBJ) main-parallel.cpp
 
 debug: FLAGS += -DDEBUG
 debug: visual
