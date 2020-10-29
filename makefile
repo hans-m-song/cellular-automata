@@ -1,4 +1,4 @@
-FLAGS     = -O2 -std=c++11
+FLAGS     = -O2 -std=c++11 -fopenmp
 CXX       = g++
 CXXFLAGS  = -Wall
 OBJ       = metric.o util.o
@@ -18,7 +18,7 @@ cuda: $(OBJ) main.o
 	$(NVCC) $(NVFLAGS) $(FLAGS) -o cuda_cellular_automata $(OBJ) main.o grid.cu
 
 mpi: $(OBJ)
-	$(MPICXX) $(CXXFLAGS) -fopenmp $(FLAGS) -o mpi_cellular_automata $(OBJ) main-parallel.cpp
+	$(MPICXX) $(CXXFLAGS) $(FLAGS) -o mpi_cellular_automata $(OBJ) main-parallel.cpp
 
 debug: FLAGS += -DDEBUG
 debug: visual

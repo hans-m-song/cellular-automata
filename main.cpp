@@ -8,7 +8,7 @@
 
 template <typename T>
 void log(std::string label, T value) {
-  std::cout << std::setw(10) << label << ":" << std::setw(10) << value << "\n";
+  std::cout << std::setw(8) << label << ":" << std::setw(12) << value << "\n";
 }
 
 int main(int argc, char** argv) {
@@ -25,7 +25,7 @@ int main(int argc, char** argv) {
   int ticks = atoi(argv[4]);
 
   auto metric = run_grid(width, height, initial_density, ticks);
-  auto avg = metric.duration(Measure::Run).count() / ticks;
+  auto avg = metric.duration(Measure::Run) / ticks;
 
 #ifdef VISUAL
   log("Width", width);

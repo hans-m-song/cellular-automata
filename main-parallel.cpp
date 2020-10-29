@@ -1,4 +1,5 @@
 #include <mpi.h>
+#include <omp.h>
 #include <stdlib.h>
 #include <unistd.h>
 
@@ -130,63 +131,67 @@ int sum_neighbour(int x, int y) {
 }
 
 /**
- * Simulates the life of a single generation
- */
-void tick(void) {
-  // #pragma omp parallel for
-  for (int y = 0; y < rows; y++) {
-    for (int x = 0; x < width; x++) {
-      int neighbours = sum_neighbour(x, y);
-      if (neighbours == 3) {
-        // if 3 live neighbours exactly, cell lives
-        next_generation[y * width + x] = 1;
-      } else if (neighbours == 2) {
-        // if 2 live neighbours exactly, cell maintains status
-        next_generation[y * width + x] = generation[y * width + x];
-      } else {
-        // otherwise else cell dies
-        next_generation[y * width + x] = 0;
-      }
-    }
-  }
-  // swap currently active generation
-  std::swap(generation, next_generation);
-}
-
-/**
  * Runs an instance of the simulation using the given parameters
  */
 void run(void) {
   metric.start(Measure::Run);
 
-  MPI_Status s;
-  for (int i = 0; i < ticks; i++) {
-    // send top row and receive bottom row
-    MPI_Sendrecv(generation, width, MPI_INT, up_id, 1, down_row, width, MPI_INT,
-                 down_id, 1, MPI_COMM_WORLD, &s);
+  double start = omp_get_wtime();
 
-    // send bottom row and receive top row
-    MPI_Sendrecv(generation + sendcounts[id] - width, width, MPI_INT, down_id,
-                 2, up_row, width, MPI_INT, up_id, 2, MPI_COMM_WORLD, &s);
+#pragma omp parallel
+  {
+    int tid = omp_get_thread_num();
+    MPI_Status s;
+    for (int i = 0; i < ticks; i++) {
+      if (tid == 0) {
+        // send top row and receive bottom row
+        MPI_Sendrecv(generation, width, MPI_INT, up_id, 1, down_row, width,
+                     MPI_INT, down_id, 1, MPI_COMM_WORLD, &s);
+
+        // send bottom row and receive top row
+        MPI_Sendrecv(generation + sendcounts[id] - width, width, MPI_INT,
+                     down_id, 2, up_row, width, MPI_INT, up_id, 2,
+                     MPI_COMM_WORLD, &s);
 
 #ifdef DEBUG
-    std::cout << id << " - " << print_arr(up_row, width) << "\n"
-              << "    " << print_arr(generation, sendcounts[id]) << "\n"
-              << "    " << print_arr(down_row, width) << "\n";
+        std::cout << id << " - " << print_arr(up_row, width) << "\n"
+                  << "    " << print_arr(generation, sendcounts[id]) << "\n"
+                  << "    " << print_arr(down_row, width) << "\n";
 #endif
+      }
 
-    tick();
+#pragma omp for
+      for (int y = 0; y < rows; y++) {
+        for (int x = 0; x < width; x++) {
+          int neighbours = sum_neighbour(x, y);
+          if (neighbours == 3) {
+            // if 3 live neighbours exactly, cell lives
+            next_generation[y * width + x] = 1;
+          } else if (neighbours == 2) {
+            // if 2 live neighbours exactly, cell maintains status
+            next_generation[y * width + x] = generation[y * width + x];
+          } else {
+            // otherwise else cell dies
+            next_generation[y * width + x] = 0;
+          }
+        }
+      }
+      // swap currently active generation
+      std::swap(generation, next_generation);
 
 #ifdef VISUAL
-    // gather current generation for printing
-    MPI_Gatherv(generation, sendcounts[id], MPI_INT, init_generation,
-                sendcounts, displs, MPI_INT, 0, MPI_COMM_WORLD);
+      if (tid == 0) {
+        // gather current generation for printing
+        MPI_Gatherv(generation, sendcounts[id], MPI_INT, init_generation,
+                    sendcounts, displs, MPI_INT, 0, MPI_COMM_WORLD);
 
-    if (id == 0) {
-      print();
-      usleep(100000);
-    }
+        if (id == 0) {
+          print();
+          usleep(100000);
+        }
+      }
 #endif
+    }
   }
 
   metric.stop(Measure::Run);
@@ -213,6 +218,21 @@ void init(void) {
   }
 
   metric.stop(Measure::Init);
+}
+
+/**
+ * Deallocate memory
+ */
+void deinit(void) {
+  if (id == 0) {
+    delete[] init_generation;
+  }
+  delete[] generation;
+  delete[] next_generation;
+  delete[] up_row;
+  delete[] down_row;
+  delete[] sendcounts;
+  delete[] displs;
 }
 
 /**
@@ -284,7 +304,7 @@ int main(int argc, char** argv) {
   run();
 
   metric.stop(Measure::Total);
-  auto avg = metric.duration(Measure::Run).count() / ticks;
+  auto avg = metric.duration(Measure::Run) / ticks;
 
 #ifdef VISUAL
   if (id == 0) {
@@ -302,15 +322,7 @@ int main(int argc, char** argv) {
   }
 #endif
 
-  if (id == 0) {
-    delete[] init_generation;
-  }
-  delete[] generation;
-  delete[] next_generation;
-  delete[] up_row;
-  delete[] down_row;
-  delete[] sendcounts;
-  delete[] displs;
+  deinit();
   MPI_Finalize();
   return 0;
 }
