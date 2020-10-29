@@ -79,8 +79,8 @@ Point empty_cell(void) {
 
 int sum_neighbour(int x, int y) {
   int sum = 0;
-  for (int j = y - 1; j < y + 1; j++) {
-    for (int i = x - 1; i < x + 1; i++) {
+  for (int j = y - 1; j < y + 2; j++) {
+    for (int i = x - 1; i < x + 2; i++) {
       int coord = (i + width) % width;
       if (j < 0) {  // above owned grid section
         if (up_row[coord]) {
@@ -244,21 +244,23 @@ int main(int argc, char** argv) {
   run();
 
   metric.stop(Measure::Total);
+  auto avg = metric.duration(Measure::Run).count() / ticks;
 
-  if (id == 0) {
-    auto avg = metric.duration(Measure::Run).count() / ticks;
 #ifdef VISUAL
+  if (id == 0) {
     log("Width", width);
     log("Height", height);
     log("Density", initial_density);
     log("Ticks", ticks);
     metric.log();
     log("Tick avg", avg);
+  }
 #else
+  if (id == 0) {
     std::cout << width << "," << height << "," << initial_density << ","
               << ticks << "," << metric.csv() << "," << avg << "\n";
-#endif
   }
+#endif
 
   if (id == 0) {
     delete[] init_generation;
