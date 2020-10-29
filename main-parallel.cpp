@@ -79,7 +79,7 @@ Point empty_cell(void) {
 
 int sum_neighbour(int x, int y) {
   int sum = 0;
-  for (int j = y - 1; j < y + 1; y++) {
+  for (int j = y - 1; j < y + 1; j++) {
     for (int i = x - 1; i < x + 1; i++) {
       int coord = (i + width) % width;
       if (j < 0) {  // above owned grid section
