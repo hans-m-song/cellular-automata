@@ -136,8 +136,6 @@ int sum_neighbour(int x, int y) {
 void run(void) {
   metric.start(Measure::Run);
 
-  double start = omp_get_wtime();
-
 #pragma omp parallel
   {
     int tid = omp_get_thread_num();
