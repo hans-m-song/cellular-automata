@@ -11,7 +11,7 @@
 
 #include "grid.hpp"
 #include "metric.hpp"
-#include "util.hpp"
+#include "randutil.h"
 
 // Storage for timings
 Metric metric;
@@ -90,8 +90,8 @@ int* allocate_space(void) {
 Point empty_cell(void) {
   int x, y;
   for (int i = 0; i < size; i++) {
-    x = random(0, width - 1);
-    y = random(0, height - 1);
+    x = randutil::rand_int(0, width - 1);
+    y = randutil::rand_int(0, height - 1);
     if (!init_generation[x * width + y]) {
       return Point(x, y);
     }
@@ -199,6 +199,8 @@ void run(void) {
  * Creates the first generation
  */
 void init(void) {
+  randutil::seed(4);
+
   // begin measuring benchmarks
   metric.start(Measure::Init);
 

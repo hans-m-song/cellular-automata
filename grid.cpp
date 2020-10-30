@@ -8,7 +8,7 @@
 #include <vector>
 
 #include "metric.hpp"
-#include "util.hpp"
+#include "randutil.h"
 
 Metric metric;
 
@@ -53,8 +53,8 @@ Point Grid::empty_cell(void) {
   int max = width * height;
   int x, y;
   for (int i = 0; i < max; i++) {
-    x = random(0, width - 1);
-    y = random(0, height - 1);
+    x = randutil::rand_int(0, width - 1);
+    y = randutil::rand_int(0, height - 1);
     if (!generation[x * width + y]) {
       return Point(x, y);
     }
@@ -172,6 +172,8 @@ Point Grid::apply_direction(Point origin, Direction direction) {
 }
 
 Metric run_grid(int width, int height, double initial_density, int ticks) {
+  randutil::seed(4);
+
   metric.start(Measure::Total);
 
   Grid* grid = new Grid(width, height, initial_density);

@@ -1,7 +1,7 @@
 FLAGS     = -O2 -std=c++11 -fopenmp
 CXX       = g++
 CXXFLAGS  = -Wall
-OBJ       = metric.o util.o
+OBJ       = metric.o util.o randutil.o
 NVCC      = nvcc
 NVFLAGS   = --gpu-architecture=sm_35 -Wno-deprecated-gpu-targets
 MPICXX    = mpic++
