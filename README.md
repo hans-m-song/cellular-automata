@@ -2,10 +2,19 @@
 
 ## compiling
 
+### serial
+
 - `make` to compile
-- `make clean` to remove compiled
-- `make new` to remove and compile
 - `make visual` enable visualization of grid each iteration
+
+### parallel
+
+- `make parallel` to compile
+- `make visualparallel` enable visualization of grid each iteration
+
+### other
+
+- `make clean` to remove compiled
 
 ## running
 
@@ -17,7 +26,7 @@
 - `ticks` number of iterations, e.g. 20
 
 - `./cellular_automata width height initial_density ticks` to run normally
-- `./debug.sh          width height initial_density ticks` to run valgrind in docker
+- `./parallel_cellular_automata width height initial_density ticks` to run using MPI and OpenMP
 
 example: `./cellular_automata 100 100 0.6 100`
 

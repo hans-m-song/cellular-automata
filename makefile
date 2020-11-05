@@ -17,8 +17,8 @@ main: $(OBJ) grid.o main.o
 cuda: $(OBJ) main.o
 	$(NVCC) $(NVFLAGS) $(FLAGS) -o cuda_cellular_automata $(OBJ) main.o grid.cu
 
-mpi: $(OBJ)
-	$(MPICXX) $(CXXFLAGS) $(FLAGS) -o mpi_cellular_automata $(OBJ) main-parallel.cpp
+parallel: $(OBJ)
+	$(MPICXX) $(CXXFLAGS) $(FLAGS) -o parallel_cellular_automata $(OBJ) main-parallel.cpp
 
 debug: FLAGS += -DDEBUG
 debug: visual
@@ -32,14 +32,14 @@ debugcuda: visualcuda
 visualcuda: FLAGS += -DVISUAL
 visualcuda: clean cuda
 
-debugmpi: FLAGS += -DDEBUG
-debugmpi: visualmpi
+debugparallel: FLAGS += -DDEBUG
+debugparallel: visualparallel
 
-visualmpi: FLAGS += -DVISUAL
-visualmpi: clean mpi
+visualparallel: FLAGS += -DVISUAL
+visualparallel: clean parallel
 
 clean:
 	rm -f *.o
 	rm -f cellular_automata
 	rm -f cuda_cellular_automata
-	rm -f mpi_cellular_automata
+	rm -f parallel_cellular_automata
