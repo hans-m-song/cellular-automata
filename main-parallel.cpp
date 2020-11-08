@@ -322,7 +322,7 @@ int main(int argc, char** argv) {
   }
 #endif
 
-  deinit();
+  // deinit();
   MPI_Finalize();
   return 0;
 }
