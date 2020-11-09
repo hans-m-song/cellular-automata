@@ -8,13 +8,8 @@
 
 module load gnu/7.2.0 gnutools mpi/openmpi3_eth
 
-workers=(1 2 4 8 16)
 dims=(1000 2000 3000 4000 5000 6000 7000 8000 9000 10000)
 
-for count in ${workers[@]}; do
-    echo "$count,$(mpiexec -n $count ./cellular_automata 1000 1000 0.5 100 2> /dev/null)" | tee -a output.parallel.worker.csv
-done
-
 for dim in ${dims[@]}; do
-    echo "$dim,$(mpiexec -n 8 ./cellular_automata $dim $dim 0.5 100 2> /dev/null)" | tee -a output.parallel.csv
+    echo "$dim,$(mpiexec -n 8 ./parallel_cellular_automata $dim $dim 0.5 100 2> /dev/null)" | tee -a output.parallel.csv
 done
